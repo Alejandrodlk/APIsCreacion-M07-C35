@@ -1,9 +1,13 @@
+//npm i node-fetch@2 para usar la version vieja de fetch
+
 const path = require('path');
 const db = require('../database/models');
 const sequelize = db.sequelize;
 const { Op } = require("sequelize");
 const moment = require('moment');
+const fetch = require('node-fetch')
 
+const getURLBase = (req) => req.protocol + '://' + req.get('host')
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
 const Movies = db.Movie;
@@ -53,6 +57,53 @@ const moviesController = {
             .then(movies => {
                 res.render('recommendedMovies.ejs', {movies});
             });
+    },
+     //Aqui debo modificar para crear la funcionalidad requerida
+     'search': async (req, res) => {
+        
+        let result
+
+        try {
+            result = await db.Movie.findOne({
+                where : {
+                    title : req.query.title
+                }
+            })
+
+            
+        if(result){
+            return res.render('moviesDetail' , {
+                movie : result
+            })
+        }
+
+        } catch (error) {
+            console.log(error);
+        }
+
+        let response  = await fetch(`http://www.omdbapi.com/?t=${req.query.title}&apikey=c0a59bf`)
+        let movie = await response.json()
+
+        if(movie){
+           // console.log('>>>>>>>>>>>>>>>>>' , getURLBase(req) + '/api/movies');
+           
+           const data = {
+            title : movie.Title,
+            rating : parseInt(movie.Ratings[0].Value),
+            awards : movie.Awards.split('&').length || 0,
+            release_date : moment(movie.Released).format('MM/DD/YYYY'),
+            genre_id : 2
+           }
+
+            let response = await fetch(getURLBase(req) + '/api/movies' , {
+                method : 'post',
+                body : JSON.stringify(data),
+                headers : {'content-Type' : 'application/json'} //
+            })
+            let result = await response.json()
+            return res.send(result)
+        }
+
     },
     //Aqui dispongo las rutas para trabajar con el CRUD
     add: function (req, res) {

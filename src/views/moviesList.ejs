@@ -21,6 +21,14 @@
 
     </p>
     <br>
+    <div class="buscar-titulo">
+        <form action="/movies/search" >
+            <input type="text" name="title" id="titulo">
+            <button class="boton-buscar" type="submit">Buscar una Pelicula</button>
+        </form>
+        
+    </div>
+    <br>
     <ul>
         <% for( let i = 0; i < movies.length; i++ ) { %>
         <li>
